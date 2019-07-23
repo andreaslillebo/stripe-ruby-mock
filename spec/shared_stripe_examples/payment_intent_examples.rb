@@ -35,6 +35,48 @@ shared_examples 'PaymentIntent API' do
     expect(payment_intent.last_payment_error.message).to eq('Not enough funds.')
   end
 
+  describe 'Create a PaymentIntent', live: true do
+    let(:payment_method) do
+      Stripe::PaymentMethod.create(
+        type: 'card',
+        card: {
+          number: 4242_4242_4242_4242,
+          exp_month: 7,
+          exp_year: 2020,
+          cvc: 314
+        }
+      )
+    end
+
+    context 'when confirming the payment intent in the same action' do
+      let(:payment_intent) do
+        Stripe::PaymentIntent.create(
+          amount: 20_00,
+          confirm: true,
+          currency: 'usd',
+          payment_method: payment_method.id
+        )
+      end
+
+      it 'creates a PaymentIntent and collects the payment' do
+        expect(payment_intent.status).to eq('succeeded')
+        expect(payment_intent.amount_received).to eq(20_00)
+      end
+
+      it 'creates a PaymentIntent with a single successful charge' do
+        charges = payment_intent.charges
+        expect(charges.total_count).to eq(1)
+
+        charge = payment_intent.charges.first
+        expect(charge.amount).to eq(20_00)
+        expect(charge.currency).to eq('usd')
+        expect(charge.payment_intent).to eq(payment_intent.id)
+        expect(charge.payment_method).to eq(payment_method.id)
+        expect(charge.status).to eq('succeeded')
+      end
+    end
+  end
+
   describe "listing payment_intent" do
     before do
       3.times do

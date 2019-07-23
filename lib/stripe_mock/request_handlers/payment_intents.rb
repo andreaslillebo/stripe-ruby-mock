@@ -32,7 +32,18 @@ module StripeMock
           )
         )
 
-        payment_intents[id].clone
+        payment_intent = payment_intents[id].clone
+
+        if params[:confirm]
+          # When `confirm=true` is used, it is equivalent to creating and
+          # confirming the PaymentIntent in the same call.
+          Stripe::PaymentIntent.confirm(
+            payment_intent[:id],
+            payment_method: params[:payment_method]
+          )
+        else
+          payment_intent
+        end
       end
 
       def update_payment_intent(route, method_url, params, headers)
@@ -77,8 +88,22 @@ module StripeMock
         route =~ method_url
         payment_intent = assert_existence :payment_intent, $1, payment_intents[$1]
 
+        # Assuming the payment succeeded
+        payment_intent[:amount_received] = payment_intent[:amount]
         payment_intent[:status] = 'succeeded'
-        payment_intent
+
+        charge_id = new_id('ch')
+        charge = charges[charge_id] = Data.mock_charge(
+          id: charge_id,
+          amount: payment_intent[:amount],
+          currency: payment_intent[:currency],
+          payment_intent: payment_intent[:id],
+          payment_method: payment_intent[:payment_method]
+        )
+        payment_intent[:charges][:data] << charge
+        payment_intent[:charges][:total_count] += 1
+
+        payment_intent.clone
       end
 
       def cancel_payment_intent(route, method_url, params, headers)
