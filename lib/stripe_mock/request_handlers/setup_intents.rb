@@ -86,7 +86,7 @@ module StripeMock
         # When a customer and a payment method is specified,
         # the payment method must be attached to a customer
         if params[:customer] && params[:payment_method]
-          payment_method = assert_existence :payment_method, id, payment_methods[id]
+          payment_method = assert_existence :payment_method, params[:payment_method], payment_methods[params[:payment_method]]
           if payment_method[:customer] != params[:customer]
             raise Stripe::InvalidRequestError.new(
               "The payment method supplied (#{payment_method[:id]}) does not belong to a Customer, but you supplied Customer #{params[:customer]}. Please attach the payment method to this Customer before using it with a SetupIntent.",

@@ -88,7 +88,7 @@ shared_examples 'SetupIntent API' do
   describe 'Update a SetupIntent', live: true do
     let(:customer) { Stripe::Customer.create }
     let(:customer_with_payment_method) do
-      Stripe::PaymentMethod.attach(payment_method.id, customer: customer)
+      Stripe::PaymentMethod.attach(payment_method.id, customer: customer.id)
       customer
     end
     let(:setup_intent) { Stripe::SetupIntent.create }
