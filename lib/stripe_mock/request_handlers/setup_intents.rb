@@ -19,7 +19,18 @@ module StripeMock
           )
         )
 
-        setup_intents[id].clone
+        setup_intent = setup_intents[id].clone
+
+        if params[:confirm]
+          # When `confirm=true` is used, it is equivalent to creating and
+          # confirming the SetupIntent in the same call.
+          Stripe::SetupIntent.confirm(
+            setup_intent[:id],
+            setup_method: params[:setup_method]
+          )
+        else
+          setup_intent
+        end
       end
 
        # get /v1/setup_intents/:id
