@@ -1187,7 +1187,9 @@ module StripeMock
         livemode: false,
         metadata: {},
         type: 'card'
-      }.merge(params)
+      # }.merge(params)
+      # TODO: This only works with rails (ActiveSupport)!!!
+      }.deep_merge(params)
     end
 
     def self.mock_setup_intent(params = {})
